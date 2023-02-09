@@ -6,7 +6,7 @@ export default class Service {
   }
 
   // if I type the stream, the pipeline complains that I'm not passing parameters to the function
-  // why?
+  // How do I solve it without `any`?
   async *transform(streams: any) {
     let keys: string[] = [];
     streams.setEncoding('utf8');
@@ -31,7 +31,7 @@ export default class Service {
   }
 
   // if I type the stream, the pipeline complains that I'm not passing parameters to the function
-  // why?
+  // How do I solve it without `any`?
   async *write(stream: any) {
     for await (const chunk of stream) {
       console.log('[todo]: write to files specific to each player position');

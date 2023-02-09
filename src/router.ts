@@ -25,8 +25,8 @@ router.get(`/fifa-23/:filename`, async function (req: Request, res: Response) {
     );
 
     res.send('OK');
-  } catch (e: unknown) {
-    if ((e as any).code === 'ENOENT') {
+  } catch (e: any) {
+    if (e.code === 'ENOENT') {
       return res.send({
         error: "This file or directory doesn't exist",
       });
