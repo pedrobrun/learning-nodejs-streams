@@ -53,6 +53,8 @@ export default class Service {
   // How do I solve it without `any`?
   async *write(stream: any) {
     for await (const chunk of stream) {
+      // some players seem to get to this step with weirdly shuffled data (keys and values)
+      // does this come from the original dataset or could it still be something happening during the pipeline?
       if (chunk.player_positions) {
         appendFile(
           `parsed/players/${chunk.player_positions}.ndjson`,
