@@ -1,7 +1,13 @@
-import { createReadStream, ReadStream } from 'fs';
+import {
+  appendFile,
+  appendFileSync,
+  createReadStream,
+  ReadStream,
+  writeFile,
+} from 'fs';
 
 export default class Service {
-  streamFile(filePath: string): ReadStream {
+  async *streamFile(filePath: string) {
     return createReadStream(filePath);
   }
 
@@ -12,7 +18,7 @@ export default class Service {
     streams.setEncoding('utf8');
     for await (const chunk of streams) {
       // csv file splits at \r\n\r\n
-      const lines = chunk.split(/\r\n\r\n/);
+      const lines = chunk.split(/\r?\n|\r|\n/g);
       for (const line of lines) {
         if (keys.length < 1) {
           keys = [...line.split(',')];
@@ -21,11 +27,24 @@ export default class Service {
 
         const props = line.split(',');
 
+        const posIdx = keys.indexOf('player_positions');
+
         const mountedObj = Object.fromEntries(
-          keys.map((_, i) => [keys[i], props[i]])
+          keys.map((_, i) => {
+            if (i === posIdx) {
+              return [keys[i] || '', props[i] ? props[i].replace('"', '') : ''];
+            }
+            return [keys[i] || '', props[i] || ''];
+          })
         );
 
-        yield mountedObj;
+        if (
+          mountedObj.player_positions &&
+          !parseInt(mountedObj.player_positions) &&
+          mountedObj.player_positions.trim().length < 4
+        ) {
+          yield mountedObj;
+        }
       }
     }
   }
@@ -34,7 +53,18 @@ export default class Service {
   // How do I solve it without `any`?
   async *write(stream: any) {
     for await (const chunk of stream) {
-      console.log('[todo]: write to files specific to each player position');
+      if (chunk.player_positions) {
+        appendFile(
+          `parsed/players/${chunk.player_positions}.ndjson`,
+          `${JSON.stringify(chunk)}\n`,
+          (err: any) => {
+            if (err && err.code === 'ENOENT')
+              return console.error(
+                'Please create the directory for the files and try again.'
+              );
+          }
+        );
+      }
     }
   }
 }
